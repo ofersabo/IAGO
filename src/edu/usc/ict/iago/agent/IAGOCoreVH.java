@@ -1,17 +1,10 @@
 package edu.usc.ict.iago.agent;
 
-import java.util.LinkedList;
+import edu.usc.ict.iago.utils.*;
+import edu.usc.ict.iago.utils.Event.EventClass;
 
 import javax.websocket.Session;
-
-import edu.usc.ict.iago.utils.Event;
-import edu.usc.ict.iago.utils.GameSpec;
-import edu.usc.ict.iago.utils.GeneralVH;
-import edu.usc.ict.iago.utils.History;
-import edu.usc.ict.iago.utils.Offer;
-import edu.usc.ict.iago.utils.Preference;
-import edu.usc.ict.iago.utils.ServletUtils;
-import edu.usc.ict.iago.utils.Event.EventClass;
+import java.util.LinkedList;
 
 public abstract class IAGOCoreVH extends GeneralVH
 {
@@ -691,6 +684,10 @@ public abstract class IAGOCoreVH extends GeneralVH
 						favorOfferIncoming = false;
 					}
 					resp.add(e2);		
+				} else {
+					String reqStr = "Will you tell me what is your least favorable item now?";
+					Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000*game.getMultiplier()));
+					resp.add(e5);
 				}
 			}
 
