@@ -20,6 +20,8 @@ public class RepeatedFavorExpression extends IAGOCoreExpression implements Expre
 	{
 		return "sad";
 	}
+	
+	
 
 	@Override
 	public String getExpression(History history) 

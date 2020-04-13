@@ -25,7 +25,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 	private AgentUtilsExtension utils;
 	private boolean timeFlag = false;
 	private boolean firstFlag = false;
-	private boolean startWithQuestion = false;
+	private boolean startWithQuestion = false, just_asked_a_question = false;
 	private int noResponse = 0;
 	private boolean noResponseFlag = false;
 	private boolean firstGame = true;
@@ -210,6 +210,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 			return resp;
 		}
 		 
+		// Ofer added 
 		if (startWithQuestion)
 		{
 
@@ -218,7 +219,8 @@ public abstract class IAGOCoreVH extends GeneralVH
 			e1.setFlushable(true);
 			resp.add(e1);
 			startWithQuestion = false;
-			firstFlag = true; 
+			firstFlag = true;
+			just_asked_a_question = true;
 					
 		}
 
@@ -595,6 +597,34 @@ public abstract class IAGOCoreVH extends GeneralVH
 							messages.getContradictionResponse(drop), (int) (2000*game.getMultiplier()));
 					e1.setFlushable(false);
 					resp.add(e1);
+				}
+				
+				// Ofer added
+				if (just_asked_a_question) {
+					// Reply with an offer
+					ServletUtils.log("got a prefernce, I am going to offer an proposal!", ServletUtils.DebugLevels.DEBUG);
+					Event offer_after_a_preference = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.offer_after_a_preference(getHistory()), 0); 
+					if(offer_after_a_preference.getOffer() != null)
+					{
+						ServletUtils.log("Offer isn't null.", ServletUtils.DebugLevels.DEBUG);
+						Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);
+						resp.add(e3);
+						Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(),  (int) (1000*game.getMultiplier()));
+						resp.add(e4);
+						lastOfferSent = offer_after_a_preference.getOffer();
+						if(favorOfferIncoming)
+						{
+							favorOffer = lastOfferSent;
+							favorOfferIncoming = false;
+						}
+						resp.add(offer_after_a_preference);
+					}
+					else {
+						ServletUtils.log("Offer is null!!", ServletUtils.DebugLevels.DEBUG);
+					}
+					just_asked_a_question = false;
+					
+					
 				}
 			}
 
