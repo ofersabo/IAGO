@@ -1,6 +1,1 @@
-.settings
-build
-WebContent/WEB-INF/lib/javax.servlet-api-4.0.1.jar
-WebContent/WEB-INF/lib/javax.websocket-api-1.1.jar
-META-INF/application.xml
-IAGO.iml
+build/*
