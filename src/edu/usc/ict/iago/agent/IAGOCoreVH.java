@@ -17,7 +17,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 	private IAGOCoreMessage messages;
 	private AgentUtilsExtension utils;
 	private boolean timeFlag = false;
-	private boolean firstFlag = false;
+	private boolean firstFlag = true;
 	private int noResponse = 0;
 	private boolean noResponseFlag = false;
 	private boolean firstGame = true;
