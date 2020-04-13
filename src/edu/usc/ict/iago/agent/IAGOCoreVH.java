@@ -25,6 +25,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 	private AgentUtilsExtension utils;
 	private boolean timeFlag = false;
 	private boolean firstFlag = false;
+	private boolean startWithQuestion = false;
 	private int noResponse = 0;
 	private boolean noResponseFlag = false;
 	private boolean firstGame = true;
@@ -180,7 +181,8 @@ public abstract class IAGOCoreVH extends GeneralVH
 
 			//we should also reset some things
 			timeFlag = false;
-			firstFlag = false;
+			firstFlag = true; // changed
+			startWithQuestion = true;
 			noResponse = 0;
 			noResponseFlag = false;
 			myLedger.offerLedger = 0;
@@ -208,6 +210,17 @@ public abstract class IAGOCoreVH extends GeneralVH
 			return resp;
 		}
 		 
+		if (startWithQuestion)
+		{
+
+			String str = "Hi there, could you tell me what is your least valuable item?";
+			Event e1 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*1000*game.getMultiplier()) );
+			e1.setFlushable(true);
+			resp.add(e1);
+			startWithQuestion = false;
+			firstFlag = true; 
+					
+		}
 
 		//should we lead with an offer?
 		if(!firstFlag && !this.disable)
