@@ -685,7 +685,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 					}
 					resp.add(e2);		
 				} else {
-					String reqStr = "Will you tell me what is your least favorable item now?";
+					String reqStr = "Out of the two remaining items, which is your least favorable item?";
 					Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000*game.getMultiplier()));
 					resp.add(e5);
 				}
