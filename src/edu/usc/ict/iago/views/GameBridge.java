@@ -230,7 +230,7 @@ public class GameBridge extends HttpServlet  {
 			if(q1 == null || q2 == null || q3 == null || q4 == null) {
 				gameChoice = "player";
 			}
-			programmed = true; // qFlag.equals("ON") ? true : false;
+			programmed = false; // qFlag.equals("ON") ? true : false;
 			
 			ServletUtils.log("Game Choice: " + gameChoice, ServletUtils.DebugLevels.DEBUG);
 			ServletUtils.log("Qualtrics Flag: " + qFlag, ServletUtils.DebugLevels.DEBUG);

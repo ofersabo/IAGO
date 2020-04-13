@@ -35,6 +35,8 @@ public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorP
 		this.utils = utils;
 		
 		this.game = this.utils.getSpec();
+		
+		//here we are initializing the 3x4 item matrix, going through each column and assigning a '5' quantity to the middle row (the unassigned items)
 		allocated = new Offer(game.getNumIssues());
 		for(int i = 0; i < game.getNumIssues(); i++)
 		{
