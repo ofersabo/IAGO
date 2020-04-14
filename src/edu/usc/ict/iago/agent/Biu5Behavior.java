@@ -143,12 +143,12 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	ServletUtils.log("DEBUG - Creating Best Case Offer", ServletUtils.DebugLevels.DEBUG);
 
     	if (userLeastWantedItem == -1) {
-    		ServletUtils.log("ERROR - reating best offer, without users least wanted item being set", ServletUtils.DebugLevels.DEBUG);
+    		ServletUtils.log("ERROR - creating Best Offer, without users least wanted item being set", ServletUtils.DebugLevels.DEBUG);
     		return null;
     	}
     	
-    	Offer propose = getCurrentAcceptedBoard();
-    	int[] free = getFreeItemsCount();
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
     	
     	int myMW = this.myPreferences[0]; //most wanted
     	int myLW = this.myPreferences[-1]; //least wanted
@@ -178,8 +178,24 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     //We take half of our least wanted, and our most wanted, and half of second wanted
     private Offer getCompromiseOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Compromise Offer", ServletUtils.DebugLevels.DEBUG);
-    	Offer propose = getCurrentAcceptedBoard();
-    	ArrayList<Integer> myPref = utils.getMyOrdering();
+    	
+    	if (userLeastWantedItem == -1) {
+    		ServletUtils.log("ERROR - creating Compromise Offer, without users least wanted item being set", ServletUtils.DebugLevels.DEBUG);
+    		return null;
+    	}
+    	
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+    	
+    	int myMW = this.myPreferences[0]; //most wanted
+    	int myLW = this.myPreferences[-1]; //least wanted - in this case LW == users least wanted
+    	int mySMW = this.myPreferences[1]; //second most wanted
+    	int mySLW = this.myPreferences[-2]; //second least wanted
+    	
+    	if (userLeastWantedItem != myLW) {
+    		ServletUtils.log("ERROR - creating Compromise Offer, when user's LW is not equal to ours", ServletUtils.DebugLevels.DEBUG);
+    		return null;
+    	}
     	
     	return null;
     }
@@ -187,8 +203,19 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     //we take our first two most wanted
     private Offer getUncooperativeOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Uncooperative Offer", ServletUtils.DebugLevels.DEBUG);
-    	Offer propose = getCurrentAcceptedBoard();
-    	ArrayList<Integer> myPref = utils.getMyOrdering();
+    	
+    	if (userLeastWantedItem != -1) {
+    		ServletUtils.log("ERROR - creating Uncooperative Offer, while knowing user's LW item", ServletUtils.DebugLevels.DEBUG);
+    		return null;
+    	}
+    	
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+    	
+    	int myMW = this.myPreferences[0]; //most wanted
+    	int myLW = this.myPreferences[-1]; //least wanted - in this case LW == users least wanted
+    	int mySMW = this.myPreferences[1]; //second most wanted
+    	int mySLW = this.myPreferences[-2]; //second least wanted
     	
     	
     	return null;
@@ -201,12 +228,15 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     		return uncooperativeOffer;
     	} else {
     		//else, recompute recursive offer, based on last recursive offer sent
-    		Offer propose = getCurrentAcceptedBoard();
-        	ArrayList<Integer> myPref = utils.getMyOrdering();
+    		Offer propose = getCurrentAcceptedBoard(); //current board status
+        	int[] free = getFreeItemsCount(); //middle row current status
+        	
+        	int myMW = this.myPreferences[0]; //most wanted
+        	int myLW = this.myPreferences[-1]; //least wanted - in this case LW == users least wanted
+        	int mySMW = this.myPreferences[1]; //second most wanted
+        	int mySLW = this.myPreferences[-2]; //second least wanted
         	
         	
-    		// Array representing the middle of the board (undecided items)
-    		int[] free = getFreeItemsCount();
     		return null;
     	} 
     }
