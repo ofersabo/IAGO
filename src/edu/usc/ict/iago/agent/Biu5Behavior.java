@@ -10,6 +10,12 @@ import java.util.ArrayList;
 import java.util.Map;
 
 public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
+	
+	/*
+	 * TODO - will we always have 4 items? because some of the offer code relies on that
+	 * What happens to our board when user sends an offer? we need to see that we are using the allocated 
+	 * offer correctly, and don't have weird bugs there.
+	 */
 
     private AgentUtilsExtension utils;
     private GameSpec game;
