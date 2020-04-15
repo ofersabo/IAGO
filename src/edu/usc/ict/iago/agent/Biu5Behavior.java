@@ -1,10 +1,6 @@
 package edu.usc.ict.iago.agent;
 
-import edu.usc.ict.iago.utils.BehaviorPolicy;
-import edu.usc.ict.iago.utils.GameSpec;
-import edu.usc.ict.iago.utils.History;
-import edu.usc.ict.iago.utils.Offer;
-import edu.usc.ict.iago.utils.ServletUtils;
+import edu.usc.ict.iago.utils.*;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -29,7 +25,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private boolean userSharePreference = false; //user told us their LWI
     private boolean isUserCooperative = false; //user is being uncooperative (didn't tell us preference)
     private int userLeastWantedItem = -1; //should be set in VHCore to user's LW item index
-    private int[] myPreferences;
+    private ArrayList<Integer> myPreferences;
     
     
     //our different offers, based on user, one or more of these will be suggested during the game
@@ -53,19 +49,9 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 			int[] init = {0, game.getIssueQuants()[i], 0}; //issueQuants is an array the size of numIssues, contains the number of items for each issue. (5 for each in our case)
 			allocated.setItem(i, init);
 		}
-		
-		getPreferencesIndices(); //initializing our preference array, index 0 is our most wanted item, whos value is position in the board game.
-		
-    }
-    
-    private void getPreferencesIndices() {
-    	ArrayList<Integer> myPref = utils.getMyOrdering();
-    	this.myPreferences = (int[]) myPref.clone();
-    	
-		for(int i  = 0; i < game.getNumIssues(); i++) {
-			int currentPref = myPref.get(i); //currentpref is the preference number for item in position i
-			this.myPreferences[currentPref] = i; //now index "2" in mypreferences array, represents item of preference 2, whos value is the index position
-		}
+
+		//initializing our preference array, index 0 is our most wanted item, whos value is position in the board game.
+		this.myPreferences = new ArrayList<>(utils.getMyOrdering());
     }
     
     @Override
@@ -107,7 +93,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 
     @Override
     protected Offer getRejectOfferFollowup(History history) {
-        return null;
+        return getNextOffer(history);
     }
 
     @Override
@@ -156,10 +142,10 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	Offer propose = getCurrentAcceptedBoard(); //current board status
     	int[] free = getFreeItemsCount(); //middle row current status
     	
-    	int myMW = this.myPreferences[0]; //most wanted
-    	int myLW = this.myPreferences[-1]; //least wanted
-    	int mySMW = this.myPreferences[1]; //second most wanted
-    	int mySLW = this.myPreferences[-2]; //second least wanted
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int myLW = this.myPreferences.get(3); //least wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int mySLW = this.myPreferences.get(2); //second least wanted
     	
     	//setting out most wanted item. MW column should be now [5, 0, 0], or otherwise whatever was in allocated before, except middle is now zero.
     	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
@@ -193,10 +179,10 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	Offer propose = getCurrentAcceptedBoard(); //current board status
     	int[] free = getFreeItemsCount(); //middle row current status
     	
-    	int myMW = this.myPreferences[0]; //most wanted
-    	int myLW = this.myPreferences[-1]; //least wanted - in this case LW == users least wanted
-    	int mySMW = this.myPreferences[1]; //second most wanted
-    	int mySLW = this.myPreferences[-2]; //second least wanted
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int myLW = this.myPreferences.get(3); //least wanted - in this case LW == users least wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int mySLW = this.myPreferences.get(2); //second least wanted
     	
     	if (userLeastWantedItem != myLW) {
     		ServletUtils.log("ERROR - creating Compromise Offer, when user's LW is not equal to ours", ServletUtils.DebugLevels.DEBUG);
@@ -218,10 +204,10 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	Offer propose = getCurrentAcceptedBoard(); //current board status
     	int[] free = getFreeItemsCount(); //middle row current status
     	
-    	int myMW = this.myPreferences[0]; //most wanted
-    	int myLW = this.myPreferences[-1]; //least wanted - in this case LW == users least wanted
-    	int mySMW = this.myPreferences[1]; //second most wanted
-    	int mySLW = this.myPreferences[-2]; //second least wanted
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int myLW = this.myPreferences.get(3); //least wanted - in this case LW == users least wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int mySLW = this.myPreferences.get(2); //second least wanted
     	
     	
     	return null;
@@ -237,10 +223,10 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     		Offer propose = getCurrentAcceptedBoard(); //current board status
         	int[] free = getFreeItemsCount(); //middle row current status
         	
-        	int myMW = this.myPreferences[0]; //most wanted
-        	int myLW = this.myPreferences[-1]; //least wanted - in this case LW == users least wanted
-        	int mySMW = this.myPreferences[1]; //second most wanted
-        	int mySLW = this.myPreferences[-2]; //second least wanted
+        	int myMW = this.myPreferences.get(0); //most wanted
+        	int myLW = this.myPreferences.get(3); //least wanted - in this case LW == users least wanted
+        	int mySMW = this.myPreferences.get(1); //second most wanted
+        	int mySLW = this.myPreferences.get(2); //second least wanted
         	
         	
     		return null;
