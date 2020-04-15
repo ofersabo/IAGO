@@ -24,6 +24,7 @@ class AgentUtilsExtension
 	public int myPresentedBATNA = -1;
 	public final double LIE_THRESHOLD = 0.6; 	
 	protected ArrayList<Boolean>  previouslyOffered = new ArrayList<Boolean>();
+	protected BIU_opponent_array opponent = new BIU_opponent_array(); 
 	public boolean competitive = false;
 	public int myRow;
 	public int adversaryRow;
