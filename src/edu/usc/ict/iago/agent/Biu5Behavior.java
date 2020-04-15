@@ -15,13 +15,14 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 	 * TODO - will we always have 4 items? because some of the offer code relies on that
 	 * What happens to our board when user sends an offer? we need to see that we are using the allocated 
 	 * offer correctly, and don't have weird bugs there.
+	 * user - our opponent.
 	 */
 
     private AgentUtilsExtension utils;
     private GameSpec game;
     private Map<String, Integer> payoff;
     private int adverseEvents = 0;
-    private Offer allocated;
+    private Offer allocated; //3x4
     private Offer concession; //not sure we need this
     
     //strategy related members
@@ -29,7 +30,10 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private boolean userSharePreference = false; //user told us their LWI
     private boolean isUserCooperative = false; //user is being uncooperative (didn't tell us preference)
     private int userLeastWantedItem = -1; //should be set in VHCore to user's LW item index
-    private int[] myPreferences;
+  
+    //array representing user preferences, should be updated from the CoreVH.
+    private int[] userPreferences = {-1,-1,-1,-1}; //[-1,-1,-1,3];
+    private int[] myPreferences = {-1,-1,-1,-1};
     
     
     //our different offers, based on user, one or more of these will be suggested during the game
@@ -59,7 +63,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     }
     
     private void getPreferencesIndices() {
-    	ArrayList<Integer> myPref = utils.getMyOrdering();
+    	ArrayList<Integer> myPref = utils.getMyOrdering(); 
     	this.myPreferences = (int[]) myPref.clone();
     	
 		for(int i  = 0; i < game.getNumIssues(); i++) {
@@ -164,7 +168,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	//setting out most wanted item. MW column should be now [5, 0, 0], or otherwise whatever was in allocated before, except middle is now zero.
     	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
     	
-    	//Taking opponent LW item.  users LW colum should be now [5,0,0], or otherwise whatever was in the allocated before, except middle is now zero.
+    	//Taking opponent LW item.  users LW column should be now [5,0,0], or otherwise whatever was in the allocated before, except middle is now zero.
     	propose.setItem(userLeastWantedItem, new int[] {allocated.getItem(userLeastWantedItem)[0] + free[userLeastWantedItem], 0, allocated.getItem(userLeastWantedItem)[2]});
     	
     	//giving opponent our middle items
