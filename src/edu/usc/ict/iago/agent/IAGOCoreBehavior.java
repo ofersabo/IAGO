@@ -6,6 +6,15 @@ import edu.usc.ict.iago.utils.Offer;
 
 public abstract class IAGOCoreBehavior implements BehaviorPolicy
 {
+	
+	// ofer added
+	protected Offer offer_after_a_preference(History history) {
+		Offer propose = null;
+		return propose;
+		
+	}
+	
+	
 	/**
 	 * Update the internal representation of what offers are considered "firm" currently.
 	 * @param update the total summed offer to save
@@ -79,7 +88,7 @@ public abstract class IAGOCoreBehavior implements BehaviorPolicy
 	{
 		return false;
 	}
-	
+
 	/**
 	 * Allows you to change the adverse Events counter, which weakens the agent's margin
 	 * @param change the amount to change by

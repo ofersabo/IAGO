@@ -23,6 +23,13 @@ public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorP
 		NONE;
 	}
 	
+	@Override
+	protected Offer offer_after_a_preference(History history)
+	{
+		return getNextOffer(history);
+	}
+	
+	
 	public RepeatedFavorBehavior (LedgerBehavior lb)
 	{
 		super();

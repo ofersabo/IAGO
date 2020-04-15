@@ -61,6 +61,12 @@ public class IAGOCompetitiveBehavior extends IAGOCoreBehavior implements Behavio
 		return getFirstOffer();
 	}
 	
+	@Override
+	protected Offer offer_after_a_preference(History history)
+	{
+		return getFirstOffer();
+	}
+	
 	private Offer getFirstOffer()
 	{
 		Offer propose = new Offer(game.getNumIssues());
