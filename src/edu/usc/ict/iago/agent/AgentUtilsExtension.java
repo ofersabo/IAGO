@@ -85,6 +85,7 @@ class AgentUtilsExtension
 	protected void addPref (Preference p)
 	{
 		preferences.add(p);
+		opponent.add_pref(p);
 		ServletUtils.log("Got prefernces!", ServletUtils.DebugLevels.DEBUG);
 	}
 	
