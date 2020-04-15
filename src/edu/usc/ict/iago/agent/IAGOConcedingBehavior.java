@@ -206,6 +206,13 @@ public class IAGOConcedingBehavior extends IAGOCoreBehavior implements BehaviorP
 		concession = propose;
 		return propose;
 	}
+	
+	@Override
+	protected Offer offer_after_a_preference(History history)
+	{
+		return getFirstOffer(history);
+	}
+	
 
 	@Override
 	protected Offer getRejectOfferFollowup(History history) {
