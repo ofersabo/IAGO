@@ -77,7 +77,7 @@ public class BIU_opponent_array {
 		for (int x = 0; x < graph.size(); x++)
 		{	
 			int v = graph.get(x).size();
-			if (v < min) {
+			if (v > min) {
 				min = v;
 				index = x;
 			}
@@ -95,14 +95,14 @@ public class BIU_opponent_array {
 		for (int x = 0; x < graph.size(); x++)
 		{	
 			int v = graph.get(x).size();
-			if (v < min) {
+			if (v > min) {
 				sec_min = min;
 				index = first_index;
 				
 				min = v;
 				first_index = x;
 			}
-			else if (v<sec_min) {
+			else if (v > sec_min) {
 				sec_min = v;
 				index = x;
 			}
