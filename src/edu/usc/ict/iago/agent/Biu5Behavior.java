@@ -21,10 +21,11 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private Offer concession; //not sure we need this
     
     //strategy related members
-    private boolean userLeastItemSame = false; //user told us the LWI, and its the same as ours (true) otherwise (false)
     private boolean userSharePreference = false; //user told us their LWI
     private boolean isUserCooperative = false; //user is being uncooperative (didn't tell us preference)
-    private int userLeastWantedItem = -1; //should be set in VHCore to user's LW item index
+    private boolean userLeastIsOurMost = false;
+    private boolean firstOfferGenerosity = false; //represents if we took least in first offer, if both LW item is the same
+    private boolean firstOfferMade = false;
     private ArrayList<Integer> myPreferences;
     
     
@@ -59,12 +60,71 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 	{
 		allocated = update;
 	}
+    
+    protected void setUserCooperative(boolean cooperative) {
+    	this.isUserCooperative = cooperative;
+    }
 
     @Override
 	protected Offer getAllocated ()
 	{
 		return allocated;
 	}
+
+    protected boolean getFirstOfferGenerosity() {
+    	return this.firstOfferGenerosity;
+    }
+    
+    protected boolean getWasFirstOfferMade() {
+    	return this.firstOfferMade;
+    }
+    @Override
+	protected int getAcceptMargin() {
+		return Math.max(0, Math.min(game.getNumIssues(), adverseEvents));//basic decaying will, starts with fair
+	}
+
+
+    @Override
+	protected Offer getConceded ()
+	{
+		return allocated;
+	}
+
+    @Override
+	protected void updateAdverseEvents (int change)
+	{
+		adverseEvents = Math.max(0, adverseEvents + change);
+	}
+    
+    /*
+     * Following function represents callable offer functions from the coreVH
+     */
+    
+    //function that is called after preferences, while final offers can be called from nextOffer
+    protected Offer offer_after_a_preference(History history)
+	{
+    	int userLW = this.utils.opponent.get_least();
+    	int user2LW = this.utils.opponent.get_second_least();
+    	
+    	if (userLW == -1 && user2LW == -1) {
+    		return getUncooperativeOffer(history); //maybe not what we want to do but for now.
+    	} else if (userLW != -1 && user2LW != -1) {
+    		return getSecondLeastOffer(history, userLW, user2LW);
+    	} else if (user2LW == -1 && userLW != -1) {
+    		return getFirstLeastOffer(history, userLW);
+    	}
+    	return null;
+	}
+    
+    @Override
+    public Offer getNextOffer(History history) {
+    	return null;
+    }
+    
+    @Override
+    protected Offer getRejectOfferFollowup(History history) {
+        return getNextOffer(history);
+    }
 
     @Override
     protected Offer getFinalOffer(History history) {
@@ -85,55 +145,73 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     protected Offer getFirstOffer(History history) {
         return null;
     }
-
-    @Override
-	protected int getAcceptMargin() {
-		return Math.max(0, Math.min(game.getNumIssues(), adverseEvents));//basic decaying will, starts with fair
-	}
-
-    @Override
-    protected Offer getRejectOfferFollowup(History history) {
-        return getNextOffer(history);
-    }
-
-    @Override
-	protected Offer getConceded ()
-	{
-		return allocated;
-	}
-
-    @Override
-	protected void updateAdverseEvents (int change)
-	{
-		adverseEvents = Math.max(0, adverseEvents + change);
-	}
-
-    @Override
-    public Offer getNextOffer(History history) {
-    	//TODO: Need to make sure the member: userLeastItemSame, userSharePreference, isUserCooperative 
-    	//are updated in CoreVH before we call offer for the first time
+    
+    /*
+     * Following private section represents all of our different offers
+     */
+    
+    private Offer getFirstLeastOffer(History history, int userLW) {
+    	ServletUtils.log("DEBUG - First Cycle Offer, user told least wanted item", ServletUtils.DebugLevels.DEBUG);
     	
-    	//user told us the LWI, and its the same as ours
-    	if (inRecursiveMode) {
-    		return getRecursiveOffer(history);
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+
+    	int myLW = this.myPreferences.get(3); //my least wanted
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	//two cases:
+    	if (myLW == userLW) {
+    		ServletUtils.log("DEBUG - First Cycle Offer, LW item is the same", ServletUtils.DebugLevels.DEBUG);
+        	
+    		//lets divide the least wanted item
+
+    		int ourLeastAmount, userLeastAmount = 0;
+    		
+    		if (free[userLW] < 5) {
+    			ourLeastAmount = free[userLW];
+    			userLeastAmount = 0;
+    		} else {
+    			userLeastAmount = free[userLW] / 2; //should return 2;
+    			ourLeastAmount = free[userLW] - userLeastAmount; //should be 3;
+    		}
+    		if (ourLeastAmount > userLeastAmount) firstOfferGenerosity = true; //first round we are generous;
+    		
+    		propose.setItem(userLW, new int[] {allocated.getItem(userLW)[0] + ourLeastAmount, 0, allocated.getItem(userLW)[2] + userLeastAmount});
+        	
+    		this.firstOfferMade = true;
+    		this.allocated = propose; //updating our board;
+        	return propose;
+
     	} else {
-	    	if (userLeastItemSame) {
-	    		inRecursiveMode = true; //in our strategy diagram, once we have made an initial offer, we go to recursive mode
-	    		return getCompromiseOffer(history);
-	    	} else if (userSharePreference && isUserCooperative) { //the LWI is not the same as ours
-	    		inRecursiveMode = true;
-	    		return getBestCaseOffer(history);
-	    	} else { //assuming user is uncooperative (one of the member is probably not necessary
-	    		inRecursiveMode = true;
-	    		return getUncooperativeOffer(history);
-	    	}
+    		ServletUtils.log("DEBUG - First Cycle Offer, LW item is different", ServletUtils.DebugLevels.DEBUG);
+        	
+    		if (userLW == myMW) userLeastIsOurMost = true;//great! best case scenario for us.
+    		//we'll take user's least, and give our least.
+    		
+    		//Taking opponent LW item.  users LW column should be now [5,0,0], or otherwise whatever was in the allocated before, except middle is now zero.
+        	propose.setItem(userLW, new int[] {allocated.getItem(userLW)[0] + free[userLW], 0, allocated.getItem(userLW)[2]});
+        	
+        	//Giving our least wanted item
+        	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2] + free[myLW]});
+        	
+        	this.firstOfferMade = true;
+        	this.allocated = propose; //updating our board;
+        	return propose;
+        	
     	}
     }
     
-    //We take user's least wanted, and our most wanted
+    private Offer getSecondLeastOffer(History history, int userLW, int user2LW) {
+    	ServletUtils.log("DEBUG - Second Cycle Offer, user told second least wanted item", ServletUtils.DebugLevels.DEBUG);
+    	
+    	return null;
+    }
+   
+    
+    //This will be called when we want to make final offer, where we take 
     private Offer getBestCaseOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Best Case Offer", ServletUtils.DebugLevels.DEBUG);
 
+    	/*
     	if (userLeastWantedItem == -1) {
     		ServletUtils.log("ERROR - creating Best Offer, without users least wanted item being set", ServletUtils.DebugLevels.DEBUG);
     		return null;
@@ -165,81 +243,31 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	this.allocated = propose;
     	
     	return propose;
+    	*/
+    	return null;
     }
     
     //We take half of our least wanted, and our most wanted, and half of second wanted
     private Offer getCompromiseOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Compromise Offer", ServletUtils.DebugLevels.DEBUG);
-    	
-    	if (userLeastWantedItem == -1) {
-    		ServletUtils.log("ERROR - creating Compromise Offer, without users least wanted item being set", ServletUtils.DebugLevels.DEBUG);
-    		return null;
-    	}
-    	
-    	Offer propose = getCurrentAcceptedBoard(); //current board status
-    	int[] free = getFreeItemsCount(); //middle row current status
-    	
-    	int myMW = this.myPreferences.get(0); //most wanted
-    	int myLW = this.myPreferences.get(3); //least wanted - in this case LW == users least wanted
-    	int mySMW = this.myPreferences.get(1); //second most wanted
-    	int mySLW = this.myPreferences.get(2); //second least wanted
-    	
-    	if (userLeastWantedItem != myLW) {
-    		ServletUtils.log("ERROR - creating Compromise Offer, when user's LW is not equal to ours", ServletUtils.DebugLevels.DEBUG);
-    		return null;
-    	}
-    	
     	return null;
     }
     
     //we take our first two most wanted
     private Offer getUncooperativeOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Uncooperative Offer", ServletUtils.DebugLevels.DEBUG);
-    	
-    	if (userLeastWantedItem != -1) {
-    		ServletUtils.log("ERROR - creating Uncooperative Offer, while knowing user's LW item", ServletUtils.DebugLevels.DEBUG);
-    		return null;
-    	}
-    	
-    	Offer propose = getCurrentAcceptedBoard(); //current board status
-    	int[] free = getFreeItemsCount(); //middle row current status
-    	
-    	int myMW = this.myPreferences.get(0); //most wanted
-    	int myLW = this.myPreferences.get(3); //least wanted - in this case LW == users least wanted
-    	int mySMW = this.myPreferences.get(1); //second most wanted
-    	int mySLW = this.myPreferences.get(2); //second least wanted
-    	
-    	
     	return null;
     }
     
     //wherever we are with our last offer, we take one off from the next valuable item, and take one less valuable item.
     private Offer getRecursiveOffer(History history) {
-    	if (!isUserCooperative) {
-    		//return a new uncooperative offer, based on what we have in the current object: uncooperativeOffer, and update
-    		return uncooperativeOffer;
-    	} else {
-    		//else, recompute recursive offer, based on last recursive offer sent
-    		Offer propose = getCurrentAcceptedBoard(); //current board status
-        	int[] free = getFreeItemsCount(); //middle row current status
-        	
-        	int myMW = this.myPreferences.get(0); //most wanted
-        	int myLW = this.myPreferences.get(3); //least wanted - in this case LW == users least wanted
-        	int mySMW = this.myPreferences.get(1); //second most wanted
-        	int mySLW = this.myPreferences.get(2); //second least wanted
-        	
-        	
-    		return null;
-    	} 
+    	return null;
     }
     
-    
-    //function Ofer added to his code, can be relevant code to preferences
-    protected Offer offer_after_a_preference(History history)
-	{
-		return getNextOffer(history);
-	}
-    
+
+    /*
+     * Following sections represents utility functions for creating offers
+     */
     //copied from repeatedBehavior
     private Offer getCurrentAcceptedBoard() {
     	//start from where we currently have accepted
@@ -261,4 +289,5 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		return free;
     }
     
+
 }
