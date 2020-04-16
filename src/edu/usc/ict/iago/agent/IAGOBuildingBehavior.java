@@ -39,6 +39,9 @@ public class IAGOBuildingBehavior extends IAGOCoreBehavior implements BehaviorPo
 		return allocated;
 	}
 	
+	protected void setUserCooperative(boolean cooperative) {
+    	//
+    }
 	@Override
 	protected Offer getConceded ()
 	{

@@ -29,6 +29,9 @@ public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorP
 		return getNextOffer(history);
 	}
 	
+	protected void setUserCooperative(boolean cooperative) {
+    	//
+    }
 	
 	public RepeatedFavorBehavior (LedgerBehavior lb)
 	{

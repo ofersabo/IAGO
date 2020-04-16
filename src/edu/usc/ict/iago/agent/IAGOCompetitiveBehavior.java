@@ -28,6 +28,10 @@ public class IAGOCompetitiveBehavior extends IAGOCoreBehavior implements Behavio
 		return allocated;
 	}
 
+	protected void setUserCooperative(boolean cooperative) {
+    	//
+    }
+	
 	@Override
 	protected Offer getConceded ()
 	{

@@ -14,7 +14,15 @@ public abstract class IAGOCoreBehavior implements BehaviorPolicy
 		
 	}
 	
+    protected boolean getFirstOfferGenerosity() {
+    	return false;
+    }
+    
+    protected boolean getWasFirstOfferMade() {
+    	return false;
+    }
 	
+    protected abstract void setUserCooperative(boolean cooperative);
 	/**
 	 * Update the internal representation of what offers are considered "firm" currently.
 	 * @param update the total summed offer to save

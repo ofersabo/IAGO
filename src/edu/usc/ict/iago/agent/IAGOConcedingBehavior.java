@@ -33,6 +33,10 @@ public class IAGOConcedingBehavior extends IAGOCoreBehavior implements BehaviorP
 		return concession;
 	}
 
+	protected void setUserCooperative(boolean cooperative) {
+    	//
+    }
+	
 	@Override
 	protected void setUtils(AgentUtilsExtension utils)
 	{

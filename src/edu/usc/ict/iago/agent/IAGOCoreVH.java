@@ -596,16 +596,31 @@ public abstract class IAGOCoreVH extends GeneralVH
 				// Ofer added
 				if (just_asked_a_question) {
 					// Reply with an offer
-					ServletUtils.log("got a prefernce, I am going to offer an proposal!", ServletUtils.DebugLevels.DEBUG);
+					behavior.setUserCooperative(true); //user is cooperative
+					
+					ServletUtils.log("got a prefernce, I am going to offer a proposal!", ServletUtils.DebugLevels.DEBUG);
 					Event offer_after_a_preference = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.offer_after_a_preference(getHistory()), 0); 
 					if(offer_after_a_preference.getOffer() != null)
 					{
 						ServletUtils.log("Offer isn't null.", ServletUtils.DebugLevels.DEBUG);
 						Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);
 						resp.add(e3);
-						Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(),  (int) (1000*game.getMultiplier()));
-						resp.add(e4);
-						lastOfferSent = offer_after_a_preference.getOffer();
+						
+						if (behavior.getFirstOfferGenerosity() && behavior.getWasFirstOfferMade()) {
+							//this means both LW items are the same, and we took more of it.
+							String str = "It seems that our least wanted item is the same! As a favor to you, I took more of this item in this round.";
+							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*1000*game.getMultiplier()) );
+							resp.add(e4);
+						} else if (behavior.getWasFirstOfferMade()) {
+							String str = "As a favor to you, I will take your least wanted item, and give you mine.";
+							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*1000*game.getMultiplier()) );
+							resp.add(e4);
+						}
+						
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(),  (int) (1000*game.getMultiplier()));
+						resp.add(e5);
+						
+						lastOfferSent = behavior.getAllocated(); //changed to instead of calling making an offer again, to our last offer, which is always updated in allocated.
 						if(favorOfferIncoming)
 						{
 							favorOffer = lastOfferSent;
