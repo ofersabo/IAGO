@@ -84,6 +84,9 @@ public class BIU_opponent_array {
 		
 			
 		}
+		if (max == 0)
+			return -1;
+		
 		return index;
 	}
 	
@@ -106,9 +109,12 @@ public class BIU_opponent_array {
 				sec_max = v;
 				index = x;
 			}
-		
+					
 			
 		}
+		if (sec_max == 0)
+			return -1;
+		
 		return index;
 	}
 		
