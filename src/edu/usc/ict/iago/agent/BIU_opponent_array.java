@@ -72,13 +72,13 @@ public class BIU_opponent_array {
 	}
 	
 	public int get_least() {
-		int min = 999;
+		int max = -1;
 		int index = -1;
 		for (int x = 0; x < graph.size(); x++)
 		{	
 			int v = graph.get(x).size();
-			if (v < min) {
-				min = v;
+			if (v > max) {
+				max = v;
 				index = x;
 			}
 		
@@ -88,22 +88,22 @@ public class BIU_opponent_array {
 	}
 	
 	public int get_second_least() {
-		int min = 999;
-		int sec_min = 999;
+		int max = -999;
+		int sec_max = -999;
 		int index = -1;
 		int first_index = -1;
 		for (int x = 0; x < graph.size(); x++)
 		{	
 			int v = graph.get(x).size();
-			if (v < min) {
-				sec_min = min;
+			if (v > max) {
+				sec_max = max;
 				index = first_index;
 				
-				min = v;
+				max = v;
 				first_index = x;
 			}
-			else if (v<sec_min) {
-				sec_min = v;
+			else if (v>sec_max) {
+				sec_max = v;
 				index = x;
 			}
 		
