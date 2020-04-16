@@ -208,8 +208,8 @@ public abstract class IAGOCoreVH extends GeneralVH
 		if (startWithQuestion)
 		{
 
-			String str = "Hi there, could you tell me what is your least valuable item?";
-			Event e1 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*1000*game.getMultiplier()) );
+			String str = "Could you tell me what is your least valuable item?";
+			Event e1 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*2000*game.getMultiplier()) );
 			e1.setFlushable(true);
 			resp.add(e1);
 			startWithQuestion = false;
@@ -359,6 +359,11 @@ public abstract class IAGOCoreVH extends GeneralVH
 		}
 
 		//what to do with delays on the part of the other player
+		
+		/*
+		 * TODO: when time goes by this section of code does stuff. Like it sends our least favorite item because player sent a preference.
+		 * 
+		 */
 		if(e.getType().equals(Event.EventClass.TIME))
 		{
 			noResponse += 1;
@@ -588,7 +593,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 					drop = drop.substring(0, drop.length() - 6);//remove last 'and'
 
 					Event e1 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.CONFUSION,
-							messages.getContradictionResponse(drop), (int) (2000*game.getMultiplier()));
+							messages.getContradictionResponse(drop), (int) (1000*game.getMultiplier()));
 					e1.setFlushable(false);
 					resp.add(e1);
 				}
@@ -609,15 +614,15 @@ public abstract class IAGOCoreVH extends GeneralVH
 						if (behavior.getFirstOfferGenerosity() && behavior.getWasFirstOfferMade()) {
 							//this means both LW items are the same, and we took more of it.
 							String str = "It seems that our least wanted item is the same! As a favor to you, I took more of this item in this round.";
-							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*1000*game.getMultiplier()) );
+							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*2000*game.getMultiplier()) );
 							resp.add(e4);
 						} else if (behavior.getWasFirstOfferMade()) {
 							String str = "As a favor to you, I will take your least wanted item, and give you mine.";
-							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*1000*game.getMultiplier()) );
+							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*2000*game.getMultiplier()) );
 							resp.add(e4);
 						}
 						
-						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(),  (int) (1000*game.getMultiplier()));
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(),  (int) (2000*game.getMultiplier()));
 						resp.add(e5);
 						
 						lastOfferSent = behavior.getAllocated(); //changed to instead of calling making an offer again, to our last offer, which is always updated in allocated.

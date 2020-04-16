@@ -18,7 +18,15 @@ public abstract class IAGOCoreBehavior implements BehaviorPolicy
     	return false;
     }
     
+    protected boolean getSecondOfferGenerosity() {
+    	return false;
+    }
+    
     protected boolean getWasFirstOfferMade() {
+    	return false;
+    }
+    
+    protected boolean getWasSecondOfferMade() {
     	return false;
     }
 	
