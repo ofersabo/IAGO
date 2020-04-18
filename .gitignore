@@ -2,3 +2,5 @@ build/*
 .DS_Store
 IAGO.iml
 .classpath
+.project
+.settings
