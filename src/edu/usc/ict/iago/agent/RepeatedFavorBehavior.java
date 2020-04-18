@@ -1,11 +1,11 @@
 package edu.usc.ict.iago.agent;
 
-import java.util.ArrayList;
-
 import edu.usc.ict.iago.utils.BehaviorPolicy;
 import edu.usc.ict.iago.utils.GameSpec;
 import edu.usc.ict.iago.utils.History;
 import edu.usc.ict.iago.utils.Offer;
+
+import java.util.ArrayList;
 
 public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		
@@ -21,12 +21,6 @@ public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorP
 		LIMITED,
 		BETRAYING,
 		NONE;
-	}
-	
-	@Override
-	protected Offer offer_after_a_preference(History history)
-	{
-		return getNextOffer(history);
 	}
 	
 	protected void setUserCooperative(boolean cooperative) {

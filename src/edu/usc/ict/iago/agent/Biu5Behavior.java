@@ -351,7 +351,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		return propose;
     }
     
-    private int[] getFreeItemsCount() {
+    public int[] getFreeItemsCount() {
     	// Array representing the middle of the board (undecided items)
 		int[] free = new int[game.getNumIssues()];
 		

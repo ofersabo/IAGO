@@ -6,30 +6,6 @@ import edu.usc.ict.iago.utils.Offer;
 
 public abstract class IAGOCoreBehavior implements BehaviorPolicy
 {
-	
-	// ofer added
-	protected Offer offer_after_a_preference(History history) {
-		Offer propose = null;
-		return propose;
-		
-	}
-	
-    protected boolean getFirstOfferGenerosity() {
-    	return false;
-    }
-    
-    protected boolean getSecondOfferGenerosity() {
-    	return false;
-    }
-    
-    protected boolean getWasFirstOfferMade() {
-    	return false;
-    }
-    
-    protected boolean getWasSecondOfferMade() {
-    	return false;
-    }
-	
     protected abstract void setUserCooperative(boolean cooperative);
 	/**
 	 * Update the internal representation of what offers are considered "firm" currently.
