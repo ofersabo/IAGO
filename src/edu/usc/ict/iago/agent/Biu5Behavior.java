@@ -25,7 +25,9 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private boolean isUserCooperative = false; //user is being uncooperative (didn't tell us preference)
     private boolean userLeastIsOurMost = false;
     private boolean firstOfferGenerosity = false; //represents if we took least in first offer, if both LW item is the same
+    private boolean secondOfferGenerosity = false;
     private boolean firstOfferMade = false;
+    private boolean secondOfferMade = false;
     private ArrayList<Integer> myPreferences;
     
     
@@ -52,9 +54,21 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		}
 
 		//initializing our preference array, index 0 is our most wanted item, whos value is position in the board game.
-		this.myPreferences = new ArrayList<>(utils.getMyOrdering());
+		getPreferencesIndices();
     }
     
+    private void getPreferencesIndices() {
+    	ArrayList<Integer> myPref = utils.getMyOrdering();	 
+    	this.myPreferences = (ArrayList<Integer>) myPref.clone();
+
+
+		for(int i  = 0; i < game.getNumIssues(); i++) {	
+			int currentPref = (myPref.get(i) - 1); //currentpref is the preference number for item in position 
+			this.myPreferences.set(currentPref, i); //now index "2" in mypreferences array,
+		}
+    }
+		
+
     @Override
 	protected void updateAllocated (Offer update)
 	{
@@ -75,9 +89,18 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	return this.firstOfferGenerosity;
     }
     
+    protected boolean getSecondOfferGenerosity() {
+    	return this.secondOfferGenerosity;
+    }
+    
     protected boolean getWasFirstOfferMade() {
     	return this.firstOfferMade;
     }
+    
+    protected boolean getWasSecondOfferMade() {
+    	return this.secondOfferMade;
+    }
+    
     @Override
 	protected int getAcceptMargin() {
 		return Math.max(0, Math.min(game.getNumIssues(), adverseEvents));//basic decaying will, starts with fair
@@ -109,7 +132,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	if (userLW == -1 && user2LW == -1) {
     		return getUncooperativeOffer(history); //maybe not what we want to do but for now.
     	} else if (userLW != -1 && user2LW != -1) {
-    		return getSecondLeastOffer(history, userLW, user2LW);
+    		return getSecondLeastOffer(history, user2LW);
     	} else if (user2LW == -1 && userLW != -1) {
     		return getFirstLeastOffer(history, userLW);
     	}
@@ -200,10 +223,60 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	}
     }
     
-    private Offer getSecondLeastOffer(History history, int userLW, int user2LW) {
+    private Offer getSecondLeastOffer(History history, int user2LW) {
     	ServletUtils.log("DEBUG - Second Cycle Offer, user told second least wanted item", ServletUtils.DebugLevels.DEBUG);
     	
-    	return null;
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+
+    	int my2LW = this.myPreferences.get(2); //my second least wanted
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	
+    	//two cases:
+    	if (my2LW == user2LW) {
+    		ServletUtils.log("DEBUG - Second Cycle Offer, 2LW item is the same", ServletUtils.DebugLevels.DEBUG);
+        	
+    		//lets divide the least wanted item
+    		int ourLeastAmount, userLeastAmount = 0;
+    		
+    		if (free[user2LW] < 5) {
+    			ourLeastAmount = free[user2LW];
+    			userLeastAmount = 0;
+    		} else {
+        		if (firstOfferGenerosity) {
+        			ourLeastAmount = free[user2LW] / 2; //should return 2;
+        			userLeastAmount = free[user2LW] - ourLeastAmount; //should be 3;
+        		}else {
+        			userLeastAmount = free[user2LW] / 2; //should return 2;
+        			ourLeastAmount = free[user2LW] - userLeastAmount; //should be 3;
+        		}
+    		}
+    		
+    		if (userLeastAmount > ourLeastAmount) secondOfferGenerosity = true; //first round we are generous;
+    		
+    		propose.setItem(user2LW, new int[] {allocated.getItem(user2LW)[0] + ourLeastAmount, 0, allocated.getItem(user2LW)[2] + userLeastAmount});
+        	
+
+    		this.secondOfferMade = true;
+    		this.allocated = propose; //updating our board;
+        	return propose;
+    		
+    	} else {
+    		
+    		if (user2LW == myMW) userLeastIsOurMost = true;//great! best case scenario for us.
+    		//we'll take user's least, and give our least.
+    		
+    		//Taking opponent LW item.  users LW column should be now [5,0,0], or otherwise whatever was in the allocated before, except middle is now zero.
+        	propose.setItem(user2LW, new int[] {allocated.getItem(user2LW)[0] + free[user2LW], 0, allocated.getItem(user2LW)[2]});
+        	
+        	//Giving our least wanted item
+        	propose.setItem(my2LW, new int[] {allocated.getItem(my2LW)[0], 0, allocated.getItem(my2LW)[2] + free[my2LW]});
+        	
+
+    		this.secondOfferMade = true;
+    		this.allocated = propose; //updating our board;
+        	return propose;	
+    	}
     }
    
     
@@ -278,7 +351,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		return propose;
     }
     
-    private int[] getFreeItemsCount() {
+    public int[] getFreeItemsCount() {
     	// Array representing the middle of the board (undecided items)
 		int[] free = new int[game.getNumIssues()];
 		

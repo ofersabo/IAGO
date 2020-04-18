@@ -1,13 +1,9 @@
 package edu.usc.ict.iago.agent;
 
-import java.util.ArrayList;
-
-import edu.usc.ict.iago.utils.BehaviorPolicy;
-import edu.usc.ict.iago.utils.GameSpec;
-import edu.usc.ict.iago.utils.History;
-import edu.usc.ict.iago.utils.Offer;
-import edu.usc.ict.iago.utils.ServletUtils;
+import edu.usc.ict.iago.utils.*;
 import edu.usc.ict.iago.utils.ServletUtils.DebugLevels;
+
+import java.util.ArrayList;
 
 public class IAGOCompetitiveBehavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		
@@ -61,12 +57,6 @@ public class IAGOCompetitiveBehavior extends IAGOCoreBehavior implements Behavio
 	
 	@Override
 	protected Offer getFirstOffer(History history)
-	{
-		return getFirstOffer();
-	}
-	
-	@Override
-	protected Offer offer_after_a_preference(History history)
 	{
 		return getFirstOffer();
 	}

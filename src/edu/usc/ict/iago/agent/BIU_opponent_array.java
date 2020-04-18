@@ -120,9 +120,3 @@ public class BIU_opponent_array {
 		
 		
 }
-
-	
-	
-	
-
-
