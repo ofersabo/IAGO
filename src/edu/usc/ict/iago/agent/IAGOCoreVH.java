@@ -746,12 +746,12 @@ public abstract class IAGOCoreVH extends GeneralVH
 					}
 					resp.add(e2);		
 				} else if (behavior instanceof Biu5Behavior) {
-					if (((Biu5Behavior)this.behavior).getWasFirstOfferMade() && ((Biu5Behavior)this.behavior).getFreeItemsCount().length == 2){
+					if (((Biu5Behavior)this.behavior).getWasFirstOfferMade() && ((Biu5Behavior)this.behavior).getFullyAllocatedItemsCountInt() == 2) {
 						// In case that first offer was accepted and 2 items left on the board
 						String reqStr = "Out of the two remaining items, which is your least favorable item?";
 						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
 						resp.add(e5);
-					} else if (((Biu5Behavior)this.behavior).getWasFirstOfferMade() && ((Biu5Behavior)this.behavior).getFreeItemsCount().length == 3){
+					} else if (((Biu5Behavior)this.behavior).getWasFirstOfferMade() && ((Biu5Behavior)this.behavior).getFullyAllocatedItemsCountInt() == 1){
 						// In case that first offer was accepted and 3 items left on the board
 						String reqStr = "Out of the three remaining items, which is your least favorable item?";
 						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
