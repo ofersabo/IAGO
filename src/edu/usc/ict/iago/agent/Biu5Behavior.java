@@ -3,7 +3,10 @@ package edu.usc.ict.iago.agent;
 import edu.usc.ict.iago.utils.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 	
@@ -351,7 +354,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		return propose;
     }
     
-    public int[] getFreeItemsCount() {
+    private int[] getFreeItemsCount() {
     	// Array representing the middle of the board (undecided items)
 		int[] free = new int[game.getNumIssues()];
 		
@@ -362,5 +365,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		return free;
     }
     
-
+	public int getFullyAllocatedItemsCountInt() {
+		return Collections.frequency(Arrays.stream(getFreeItemsCount()).boxed().collect(Collectors.toList()), 0);
+	}
 }
