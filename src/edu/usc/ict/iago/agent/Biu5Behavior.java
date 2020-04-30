@@ -1,5 +1,6 @@
 package edu.usc.ict.iago.agent;
 
+import edu.usc.ict.iago.agent.RepeatedFavorBehavior.LedgerBehavior;
 import edu.usc.ict.iago.utils.*;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private boolean secondOfferMade = false;
     private ArrayList<Integer> myPreferences;
     
+    private boolean uncooperativeOfferMade = false;
     
     //our different offers, based on user, one or more of these will be suggested during the game
     private Offer bestCaseOffer; //least item is told and its not the same
@@ -329,9 +331,31 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	return null;
     }
     
-    //we take our first two most wanted
+    //we take our first two most wanted    
     private Offer getUncooperativeOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Uncooperative Offer", ServletUtils.DebugLevels.DEBUG);
+    	
+    	
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+    	
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int myTMW = this.myPreferences.get(1); //second most wanted
+    	int myLW = this.myPreferences.get(2); //second least wanted
+    	
+    	//Our uncooperative offer - take our 2 most wanted items, and give user the other two
+    	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
+    	propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0] + free[mySMW], 0, allocated.getItem(mySMW)[2]});
+    	
+    	propose.setItem(myTMW, new int[] {allocated.getItem(myTMW)[0], 0, allocated.getItem(myTMW)[2]  + free[myTMW]});
+    	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2]  + free[myLW]});
+    	
+    	
+    	this.uncooperativeOfferMade = true;
+		this.allocated = propose; //updating our board;
+    	return propose;	
+    	
     	return null;
     }
     
