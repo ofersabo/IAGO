@@ -645,7 +645,6 @@ public abstract class IAGOCoreVH extends GeneralVH
 				Event e0 = new Event(this.getID(), Event.EventClass.SEND_EXPRESSION, expr, 2000, (int) (700*game.getMultiplier()));
 				resp.add(e0);
 			}
-
 		
 			Event e0 = messages.getVerboseMessageResponse(getHistory(), game, e);
 			if (e0 != null && (e0.getType() == EventClass.OFFER_IN_PROGRESS || e0.getSubClass() == Event.SubClass.FAVOR_ACCEPT)) 
@@ -768,6 +767,20 @@ public abstract class IAGOCoreVH extends GeneralVH
 				myLedger.offerLedger = 0;
 
 				Event e2 = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.getRejectOfferFollowup(getHistory()), (int) (3000*game.getMultiplier()));
+				if (behavior instanceof Biu5Behavior) {
+					if (((Biu5Behavior) this.behavior).getWasFirstOfferMade() && ((Biu5Behavior) this.behavior).getFullyAllocatedItemsCountInt() == 4) {
+						String reqStr = "Oh..I assume You rejected the offer by mistake, since this offer is awesome for you, as im taking your least valuable item!";
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
+						resp.add(e5);
+					} else if (((Biu5Behavior) this.behavior).getWasSecondOfferMade() && ((Biu5Behavior) this.behavior).getFullyAllocatedItemsCountInt() == 2) {
+						String reqStr = "Oh..I assume You rejected the offer by mistake, since this offer is awesome for you, as im taking your second least valuable item!";
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
+						resp.add(e5);
+					} else {
+						// Need to handle the cases of least item is the same and case that splitting last item
+					}
+				}
+
 				if(e2.getOffer() != null)
 				{
 					Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);
