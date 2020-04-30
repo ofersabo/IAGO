@@ -319,6 +319,7 @@ class AgentUtilsExtension
 	protected boolean reconcileContradictions()
 	{
 		orderings = new ArrayList<ArrayList<Integer>>();
+		Boolean hadConfilctWithWorst = false;
 		for (int i = 0; i < permutations.length; i++)
 		{
 			ArrayList<Integer> a = new ArrayList<Integer>();
@@ -354,8 +355,11 @@ class AgentUtilsExtension
 				for (int x = 0; x < orderings.size(); x++)
 				{
 					ArrayList<Integer> o = orderings.get(x);
-					if(o.get(pref.getIssue1()) != game.getNumIssues())//if the ordering does not have the item as the last place 
+					if(o.get(pref.getIssue1()) != game.getNumIssues()) { //if the ordering does not have the item as the last place 
 						toRemove.add(o);
+						// Ofer Added
+						hadConfilctWithWorst = true;
+					}
 				}
 			}
 			else if(r == Relation.GREATER_THAN)
@@ -395,8 +399,12 @@ class AgentUtilsExtension
 				}
 			}
 			
-			for(ArrayList<Integer> al : toRemove)
+			for(ArrayList<Integer> al : toRemove) {
 				orderings.remove(al);
+				// Ofer Added
+			}
+			
+			
 			
 			//ServletUtils.log(orderings.toString(), ServletUtils.DebugLevels.DEBUG);
 		}
@@ -406,6 +414,13 @@ class AgentUtilsExtension
 		{
 			return true;
 		}
+
+		// Ofer Added
+		if (hadConfilctWithWorst == true) {
+			return false;
+		}
+			
+		
 		return false;
 	}
 	
