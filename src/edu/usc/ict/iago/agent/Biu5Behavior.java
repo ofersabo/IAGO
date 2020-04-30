@@ -10,20 +10,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Random;
 
-public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
-	
-	/*
-	 * TODO - will we always have 4 items? because some of the offer code relies on that
-	 * What happens to our board when user sends an offer? we need to see that we are using the allocated 
-	 * offer correctly, and don't have weird bugs there.
-	 */
-
+public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy
+{
     private AgentUtilsExtension utils;
     private GameSpec game;
     private Map<String, Integer> payoff;
     private int adverseEvents = 0;
     private Offer allocated;
     private Offer concession; //not sure we need this
+    
+    private double OFFER_THRESH = .9;
+    private int bestCaseOfferScore = 0;
     
     //strategy related members
     private boolean userSharePreference = false; //user told us their LWI
@@ -44,7 +41,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private Offer lastRecursiveOffer = null;
     
     private boolean inRecursiveMode = false;
-    private ArrayList<Offer> previousOffersMade = new ArrayList<Offer>(); // TODO: add any offer made to this list (to be used in the getRecursiveOffer)
+    private ArrayList<Offer> previousOffersMade = new ArrayList<Offer>(); // holds any past offer made (to be used in the getRecursiveOffer)
     //Our recursive strategy will have to be recomputed every time again, since we've passed the first round of
     // offers, and from then on we will use the same strategy to recompute the offer, taking one off and adding one.
 
@@ -62,6 +59,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 
 		//initializing our preference array, index 0 is our most wanted item, whos value is position in the board game.
 		getPreferencesIndices();
+		calculateBestCaseOffer();
     }
     
     private void getPreferencesIndices() {
@@ -73,6 +71,25 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 			int currentPref = (myPref.get(i) - 1); //currentpref is the preference number for item in position 
 			this.myPreferences.set(currentPref, i); //now index "2" in mypreferences array,
 		}
+    }
+    
+    private void calculateBestCaseOffer() {
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+    	
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int myTMW = this.myPreferences.get(1); //second most wanted
+    	int myLW = this.myPreferences.get(2); //second least wanted
+    	
+    	//Our best case offer - take our 2 most wanted items, and give user the other two
+    	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
+    	propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0] + free[mySMW], 0, allocated.getItem(mySMW)[2]});
+    	
+    	propose.setItem(myTMW, new int[] {allocated.getItem(myTMW)[0], 0, allocated.getItem(myTMW)[2]  + free[myTMW]});
+    	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2]  + free[myLW]});
+    			
+    	bestCaseOfferScore = scoreOffer(propose);
     }
 		
 
@@ -132,10 +149,27 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	return false;
     }
     
-    // a threshold // TODO: complete grading of an offer (to be used in the getRecursiveMethod)
-    protected int gradeOffer(Offer offer)
+    // a threshold
+    protected double gradeOffer(Offer offer)
     {
-    	return 0;
+    	double score = this.scoreOffer(offer);
+    	if (score <= utils.myPresentedBATNA)
+    		return 0.;
+    	else if (score >= bestCaseOfferScore)
+    		return 1.;
+    	else
+    		return score / (double)bestCaseOfferScore;
+    }
+    
+    protected int scoreOffer(Offer offer)
+    {
+		int totalPoints = 0;
+		for (int index = 0; index < game.getNumIssues(); index++)
+		{
+			String s = game.getIssuePluralNames()[index];
+			totalPoints += offer.getItem(index)[0] * game.getSimplePoints(utils.getID()).get(s);
+		}
+		return totalPoints;
     }
     
     /*
@@ -377,8 +411,8 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	
     	int userLW = this.utils.opponent.get_least();
     	int userSLW = this.utils.opponent.get_second_least();
-    	int userSMW = this.utils.opponent.get_second_most(); // TODO (complete in BIU_opponent_array)
-    	int userMW = this.utils.opponent.get_most(); // TOOD (complete in BIU_opponent_array)
+    	int userSMW = this.utils.opponent.get_second_most();
+    	int userMW = this.utils.opponent.get_most();
     	
     	boolean generous = firstOfferGenerosity || secondOfferGenerosity;
     	
@@ -411,12 +445,16 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
             		
             		propose.setItem(randItem, new int[] {propose.getItem(randItem)[0] + 1, 0, propose.getItem(randItem)[2] - 1});
             		propose.setItem(nextRandItem, new int[] {propose.getItem(nextRandItem)[0] - 1, 0, propose.getItem(nextRandItem)[2] + 1});
-        		} while (previousOffersMade.contains(propose)); // TODO: make sure that offer has the proper 'equals' method
+        		} while (previousOffersMade.contains(propose)); // Offer already re-implements the 'equals' method (no need for us to do that)
         	}
     	}
     	else // first, we wish to use the uncooperative offer
     	{
     		propose = getUncooperativeOffer(history);
+    	}
+    	
+    	if (gradeOffer(propose) < OFFER_THRESH) {
+    		propose = null;
     	}
     	
     	if (propose != null)
