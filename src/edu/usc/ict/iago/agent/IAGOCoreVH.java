@@ -376,6 +376,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 
 			if(noResponse >= 2)
 			{
+				System.out.println("noResponse >= 2");
 				Event e0 = messages.getVerboseMessageResponse(getHistory(), game, e);
 				// Theoretically, this block isn't necessary. Event e0 should just be a message returned by getWaitingLang
 				if (e0 != null && (e0.getType() == EventClass.OFFER_IN_PROGRESS || e0.getSubClass() == Event.SubClass.FAVOR_ACCEPT)) 
@@ -405,13 +406,21 @@ public abstract class IAGOCoreVH extends GeneralVH
 			}
 			else if(noResponse >= 1 && noResponseFlag)
 			{
+				System.out.println("noResponse >= 1");
 				noResponseFlag = false;
+				
+				// Shachar added 
+				// Event e2 = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.getNonCooperativegetOffer(getHistory()), 0); 
 				Event e2 = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.getTimingOffer(getHistory()), 0); 
-				if(e2.getOffer() != null)
+				if(e2.getOffer() != null && just_asked_a_question)
 				{
 					Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);
 					resp.add(e3);
-					Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.OFFER_PROPOSE, messages.getProposalLang(getHistory(), game),  (int) (1000*game.getMultiplier()));
+					// Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.OFFER_PROPOSE, messages.getProposalLang(getHistory(), game),  (int) (1000*game.getMultiplier()));
+					
+					String sorry_str = "I'm sorry, but I can't give you a better offer because I don't know what your preferences are.";
+					Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, sorry_str, (int) (1*2000*game.getMultiplier()) );					
+					
 					resp.add(e4);
 					resp.add(e2);
 				}
