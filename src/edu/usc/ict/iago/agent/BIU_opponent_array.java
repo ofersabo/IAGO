@@ -126,5 +126,13 @@ public class BIU_opponent_array {
 		return index;
 	}
 		
-		
+	// TODO
+	public int get_second_most() {
+		return 0;
+	}
+	
+	// TODO
+	public int get_most() {
+		return 0;
+	}
 }
