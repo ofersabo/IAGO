@@ -1,15 +1,9 @@
 package edu.usc.ict.iago.views;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.logging.Logger;
+import com.google.gson.Gson;
+import edu.usc.ict.iago.utils.*;
+import edu.usc.ict.iago.utils.GameBridgeUtils.NegotiationMode;
+import edu.usc.ict.iago.utils.Governor.SessionState;
 
 import javax.mail.MessagingException;
 import javax.servlet.ServletException;
@@ -23,14 +17,18 @@ import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.server.ServerEndpoint;
-
-
-import com.google.gson.Gson;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 //import edu.usc.ict.iago.agent.IAGOChenVH;
-import edu.usc.ict.iago.utils.*;
-import edu.usc.ict.iago.utils.Governor.SessionState;
-import edu.usc.ict.iago.utils.GameBridgeUtils.NegotiationMode;
 
 /**
  * This the GameBridge, the connector between the web hosting front end of IAGO and the back end.
@@ -232,7 +230,7 @@ public class GameBridge extends HttpServlet  {
 			if(q1 == null || q2 == null || q3 == null || q4 == null) {
 				gameChoice = "player";
 			}
-			programmed = qFlag.equals("ON") ? true : false;
+			programmed = false; // qFlag.equals("ON") ? true : false;
 			
 			ServletUtils.log("Game Choice: " + gameChoice, ServletUtils.DebugLevels.DEBUG);
 			ServletUtils.log("Qualtrics Flag: " + qFlag, ServletUtils.DebugLevels.DEBUG);

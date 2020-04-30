@@ -168,7 +168,7 @@ public class RepeatedFavorMessage extends IAGOCoreMessage implements MessagePoli
 
 	public Event getVerboseMessageResponse(History history, GameSpec game, Event ePrime) {
 		
-		int delay = (int) (2000*game.getMultiplier()); 
+		int delay = (int) (1000*game.getMultiplier()); 
 		int value = -1;
 		int issue1 = -1;
 		int issue2 = -1;

@@ -1,11 +1,11 @@
 package edu.usc.ict.iago.agent;
 
-import java.util.ArrayList;
-
 import edu.usc.ict.iago.utils.BehaviorPolicy;
 import edu.usc.ict.iago.utils.GameSpec;
 import edu.usc.ict.iago.utils.History;
 import edu.usc.ict.iago.utils.Offer;
+
+import java.util.ArrayList;
 
 public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		
@@ -23,6 +23,10 @@ public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorP
 		NONE;
 	}
 	
+	protected void setUserCooperative(boolean cooperative) {
+    	//
+    }
+	
 	public RepeatedFavorBehavior (LedgerBehavior lb)
 	{
 		super();
@@ -35,6 +39,8 @@ public class RepeatedFavorBehavior extends IAGOCoreBehavior implements BehaviorP
 		this.utils = utils;
 		
 		this.game = this.utils.getSpec();
+		
+		//here we are initializing the 3x4 item matrix, going through each column and assigning a '5' quantity to the middle row (the unassigned items)
 		allocated = new Offer(game.getNumIssues());
 		for(int i = 0; i < game.getNumIssues(); i++)
 		{

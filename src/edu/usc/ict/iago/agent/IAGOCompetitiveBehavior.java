@@ -1,13 +1,9 @@
 package edu.usc.ict.iago.agent;
 
-import java.util.ArrayList;
-
-import edu.usc.ict.iago.utils.BehaviorPolicy;
-import edu.usc.ict.iago.utils.GameSpec;
-import edu.usc.ict.iago.utils.History;
-import edu.usc.ict.iago.utils.Offer;
-import edu.usc.ict.iago.utils.ServletUtils;
+import edu.usc.ict.iago.utils.*;
 import edu.usc.ict.iago.utils.ServletUtils.DebugLevels;
+
+import java.util.ArrayList;
 
 public class IAGOCompetitiveBehavior extends IAGOCoreBehavior implements BehaviorPolicy {
 		
@@ -28,6 +24,10 @@ public class IAGOCompetitiveBehavior extends IAGOCoreBehavior implements Behavio
 		return allocated;
 	}
 
+	protected void setUserCooperative(boolean cooperative) {
+    	//
+    }
+	
 	@Override
 	protected Offer getConceded ()
 	{
