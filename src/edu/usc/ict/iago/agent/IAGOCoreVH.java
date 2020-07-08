@@ -597,48 +597,45 @@ public abstract class IAGOCoreVH extends GeneralVH
 					e1.setFlushable(false);
 					resp.add(e1);
 				}
-				
+
 				// Ofer added
 				if (just_asked_a_question) {
-					// Reply with an offer
-					behavior.setUserCooperative(true); //user is cooperative
-					
-					ServletUtils.log("got a prefernce, I am going to offer a proposal!", ServletUtils.DebugLevels.DEBUG);
-					Event offer_after_a_preference = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.offer_after_a_preference(getHistory()), 0); 
-					if(offer_after_a_preference.getOffer() != null)
-					{
-						ServletUtils.log("Offer isn't null.", ServletUtils.DebugLevels.DEBUG);
-						Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);
-						resp.add(e3);
-						
-						if (behavior.getFirstOfferGenerosity() && behavior.getWasFirstOfferMade()) {
-							//this means both LW items are the same, and we took more of it.
-							String str = "It seems that our least wanted item is the same! As a favor to you, I took more of this item in this round.";
-							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*2000*game.getMultiplier()) );
-							resp.add(e4);
-						} else if (behavior.getWasFirstOfferMade()) {
-							String str = "As a favor to you, I will take your least wanted item, and give you mine.";
-							Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1*2000*game.getMultiplier()) );
-							resp.add(e4);
+					if (this.behavior instanceof Biu5Behavior) {
+						// Reply with an offer
+						behavior.setUserCooperative(true); //user is cooperative
+
+						ServletUtils.log("got a prefernce, I am going to offer a proposal!", ServletUtils.DebugLevels.DEBUG);
+						Event offer_after_a_preference = new Event(this.getID(), Event.EventClass.SEND_OFFER, ((Biu5Behavior) behavior).offer_after_a_preference(getHistory()), 0);
+						if (offer_after_a_preference.getOffer() != null) {
+							ServletUtils.log("Offer isn't null.", ServletUtils.DebugLevels.DEBUG);
+							Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);
+							resp.add(e3);
+
+							if (((Biu5Behavior) behavior).getFirstOfferGenerosity() && ((Biu5Behavior) behavior).getWasFirstOfferMade()) {
+								//this means both LW items are the same, and we took more of it.
+								String str = "It seems that our least wanted item is the same! As a favor to you, I took more of this item in this round.";
+								Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1 * 2000 * game.getMultiplier()));
+								resp.add(e4);
+							} else if (((Biu5Behavior) behavior).getWasFirstOfferMade()) {
+								String str = "As a favor to you, I will take your least wanted item, and give you mine.";
+								Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1 * 2000 * game.getMultiplier()));
+								resp.add(e4);
+							}
+
+							Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(), (int) (2000 * game.getMultiplier()));
+							resp.add(e5);
+
+							lastOfferSent = behavior.getAllocated(); //changed to instead of calling making an offer again, to our last offer, which is always updated in allocated.
+							if (favorOfferIncoming) {
+								favorOffer = lastOfferSent;
+								favorOfferIncoming = false;
+							}
+							resp.add(offer_after_a_preference);
+						} else {
+							ServletUtils.log("Offer is null!!", ServletUtils.DebugLevels.DEBUG);
 						}
-						
-						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, messages.getProposalLangFirst(),  (int) (2000*game.getMultiplier()));
-						resp.add(e5);
-						
-						lastOfferSent = behavior.getAllocated(); //changed to instead of calling making an offer again, to our last offer, which is always updated in allocated.
-						if(favorOfferIncoming)
-						{
-							favorOffer = lastOfferSent;
-							favorOfferIncoming = false;
-						}
-						resp.add(offer_after_a_preference);
+						just_asked_a_question = false;
 					}
-					else {
-						ServletUtils.log("Offer is null!!", ServletUtils.DebugLevels.DEBUG);
-					}
-					just_asked_a_question = false;
-					
-					
 				}
 			}
 
@@ -648,7 +645,6 @@ public abstract class IAGOCoreVH extends GeneralVH
 				Event e0 = new Event(this.getID(), Event.EventClass.SEND_EXPRESSION, expr, 2000, (int) (700*game.getMultiplier()));
 				resp.add(e0);
 			}
-
 		
 			Event e0 = messages.getVerboseMessageResponse(getHistory(), game, e);
 			if (e0 != null && (e0.getType() == EventClass.OFFER_IN_PROGRESS || e0.getSubClass() == Event.SubClass.FAVOR_ACCEPT)) 
@@ -748,10 +744,20 @@ public abstract class IAGOCoreVH extends GeneralVH
 						favorOfferIncoming = false;
 					}
 					resp.add(e2);		
-				} else {
-					String reqStr = "Out of the two remaining items, which is your least favorable item?";
-					Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000*game.getMultiplier()));
-					resp.add(e5);
+				} else if (behavior instanceof Biu5Behavior) {
+					if (((Biu5Behavior)this.behavior).getWasFirstOfferMade() && ((Biu5Behavior)this.behavior).getFullyAllocatedItemsCountInt() == 2) {
+						// In case that first offer was accepted and 2 items left on the board
+						String reqStr = "Out of the two remaining items, which is your least favorable item?";
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
+						resp.add(e5);
+					} else if (((Biu5Behavior)this.behavior).getWasFirstOfferMade() && ((Biu5Behavior)this.behavior).getFullyAllocatedItemsCountInt() == 1){
+						// In case that first offer was accepted and 3 items left on the board
+						String reqStr = "Out of the three remaining items, which is your least favorable item?";
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
+						resp.add(e5);
+					} else {
+						// Need to handle the case were first offer was made but 1 items left on the board? or if we are on different a state
+					}
 				}
 			}
 
@@ -761,6 +767,20 @@ public abstract class IAGOCoreVH extends GeneralVH
 				myLedger.offerLedger = 0;
 
 				Event e2 = new Event(this.getID(), Event.EventClass.SEND_OFFER, behavior.getRejectOfferFollowup(getHistory()), (int) (3000*game.getMultiplier()));
+				if (behavior instanceof Biu5Behavior) {
+					if (((Biu5Behavior) this.behavior).getWasFirstOfferMade() && ((Biu5Behavior) this.behavior).getFullyAllocatedItemsCountInt() == 4) {
+						String reqStr = "Oh..I assume You rejected the offer by mistake, since this offer is awesome for you, as im taking your least valuable item!";
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
+						resp.add(e5);
+					} else if (((Biu5Behavior) this.behavior).getWasSecondOfferMade() && ((Biu5Behavior) this.behavior).getFullyAllocatedItemsCountInt() == 2) {
+						String reqStr = "Oh..I assume You rejected the offer by mistake, since this offer is awesome for you, as im taking your second least valuable item!";
+						Event e5 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.PREF_REQUEST, reqStr, (int) (1000 * game.getMultiplier()));
+						resp.add(e5);
+					} else {
+						// Need to handle the cases of least item is the same and case that splitting last item
+					}
+				}
+
 				if(e2.getOffer() != null)
 				{
 					Event e3 = new Event(this.getID(), Event.EventClass.OFFER_IN_PROGRESS, 0);

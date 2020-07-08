@@ -26,11 +26,16 @@ public class BIU_opponent_array {
 		{
 			if (pref.getIssue1() == -1)//if information not filled in
 				return;
+			
+			ArrayList<Integer> thisIssue = graph.get(i1);
 			for (int x = 0; x < graph.size(); x++)
 			{
 				if (i1 == pref.getIssue1())
 						continue;
-				graph.get(x).add(i1);
+				
+				ArrayList<Integer> vertex = graph.get(x);
+				if (!vertex.contains(i1) && !thisIssue.contains(x))
+					vertex.add(i1);
 				
 			}
 		}
@@ -43,7 +48,10 @@ public class BIU_opponent_array {
 				if (x == i1)
 					continue;
 				
-				graph.get(i1).add(x);
+				ArrayList<Integer> vertex = graph.get(i1);
+				ArrayList<Integer> other = graph.get(x);
+				if (!vertex.contains(x) && !other.contains(i1))
+					vertex.add(x);
 				
 			}
 		}
