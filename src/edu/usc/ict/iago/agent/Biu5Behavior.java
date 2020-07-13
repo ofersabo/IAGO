@@ -1,5 +1,6 @@
 package edu.usc.ict.iago.agent;
 
+import edu.usc.ict.iago.agent.RepeatedFavorBehavior.LedgerBehavior;
 import edu.usc.ict.iago.utils.*;
 
 import java.util.ArrayList;
@@ -7,21 +8,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Random;
 
-public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
-	
-	/*
-	 * TODO - will we always have 4 items? because some of the offer code relies on that
-	 * What happens to our board when user sends an offer? we need to see that we are using the allocated 
-	 * offer correctly, and don't have weird bugs there.
-	 */
-
+public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy
+{
     private AgentUtilsExtension utils;
     private GameSpec game;
     private Map<String, Integer> payoff;
     private int adverseEvents = 0;
     private Offer allocated;
     private Offer concession; //not sure we need this
+    
+    private double OFFER_THRESH = .9;
+    private int bestCaseOfferScore = 0;
     
     //strategy related members
     private boolean userSharePreference = false; //user told us their LWI
@@ -33,14 +32,16 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     private boolean secondOfferMade = false;
     private ArrayList<Integer> myPreferences;
     
+    private boolean uncooperativeOfferMade = false;
     
     //our different offers, based on user, one or more of these will be suggested during the game
-    private Offer bestCaseOffer; //least item is told and its not the same
-    private Offer compromiseOffer; //least item is told and its not the same
-    private Offer uncooperativeOffer; //user is uncooperative
-    private Offer lastRecursiveOffer;
+    private Offer bestCaseOffer = null; //least item is told and its not the same
+    private Offer compromiseOffer = null; //least item is told and its not the same
+    private Offer uncooperativeOffer = null; //user is uncooperative
+    private Offer lastRecursiveOffer = null;
     
     private boolean inRecursiveMode = false;
+    private ArrayList<Offer> previousOffersMade = new ArrayList<Offer>(); // holds any past offer made (to be used in the getRecursiveOffer)
     //Our recursive strategy will have to be recomputed every time again, since we've passed the first round of
     // offers, and from then on we will use the same strategy to recompute the offer, taking one off and adding one.
 
@@ -58,6 +59,7 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 
 		//initializing our preference array, index 0 is our most wanted item, whos value is position in the board game.
 		getPreferencesIndices();
+		calculateBestCaseOffer();
     }
     
     private void getPreferencesIndices() {
@@ -69,6 +71,25 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 			int currentPref = (myPref.get(i) - 1); //currentpref is the preference number for item in position 
 			this.myPreferences.set(currentPref, i); //now index "2" in mypreferences array,
 		}
+    }
+    
+    private void calculateBestCaseOffer() {
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+    	
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int myTMW = this.myPreferences.get(1); //second most wanted
+    	int myLW = this.myPreferences.get(2); //second least wanted
+    	
+    	//Our best case offer - take our 2 most wanted items, and give user the other two
+    	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
+    	propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0] + free[mySMW], 0, allocated.getItem(mySMW)[2]});
+    	
+    	propose.setItem(myTMW, new int[] {allocated.getItem(myTMW)[0], 0, allocated.getItem(myTMW)[2]  + free[myTMW]});
+    	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2]  + free[myLW]});
+    			
+    	bestCaseOfferScore = scoreOffer(propose);
     }
 		
 
@@ -111,16 +132,45 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 
 
     @Override
-	protected Offer getConceded ()
+	protected Offer getConceded()
 	{
 		return allocated;
 	}
 
     @Override
-	protected void updateAdverseEvents (int change)
+	protected void updateAdverseEvents(int change)
 	{
 		adverseEvents = Math.max(0, adverseEvents + change);
 	}
+    
+    // compare offers (to avoid offering the same one over and over again)
+    protected boolean sameOffers(Offer off1, Offer off2)
+    {
+    	return false;
+    }
+    
+    // a threshold
+    protected double gradeOffer(Offer offer)
+    {
+    	double score = this.scoreOffer(offer);
+    	if (score <= utils.myPresentedBATNA)
+    		return 0.;
+    	else if (score >= bestCaseOfferScore)
+    		return 1.;
+    	else
+    		return score / (double)bestCaseOfferScore;
+    }
+    
+    protected int scoreOffer(Offer offer)
+    {
+		int totalPoints = 0;
+		for (int index = 0; index < game.getNumIssues(); index++)
+		{
+			String s = game.getIssuePluralNames()[index];
+			totalPoints += offer.getItem(index)[0] * game.getSimplePoints(utils.getID()).get(s);
+		}
+		return totalPoints;
+    }
     
     /*
      * Following function represents callable offer functions from the coreVH
@@ -154,12 +204,26 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
 
     @Override
     protected Offer getFinalOffer(History history) {
-        return null;
+        Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int myTMW = this.myPreferences.get(1); //second most wanted
+    	int myLW = this.myPreferences.get(2); //second least wanted
+    	
+		//lets divide the items: {ceil(MW / 2), ceil(SMW / 2), floor(TMW / 2), floor(LW / 2)}, give the rest to the user
+    	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + (int)((free[myMW] / 2.0) + .5), 0, allocated.getItem(myMW)[2] + (int)(free[myMW] / 2.0)});
+    	propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0] + (int)((free[mySMW] / 2.0) + .5), 0, allocated.getItem(mySMW)[2] + (int)(free[mySMW] / 2.0)});
+    	propose.setItem(myTMW, new int[] {allocated.getItem(myTMW)[0] + (int)(free[myTMW] / 2.0), 0, allocated.getItem(myTMW)[2] + (int)((free[myTMW] / 2.0) + .5)});
+    	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0] + (int)(free[myLW] / 2.0), 0, allocated.getItem(myLW)[2] + (int)((free[myLW] / 2.0) + .5)});
+    	
+    	return propose;
     }
 
     @Override
     protected Offer getTimingOffer(History history) {
-        return null;
+        return getUncooperativeOffer(history);
     }
 
     @Override
@@ -204,7 +268,6 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     		propose.setItem(userLW, new int[] {allocated.getItem(userLW)[0] + ourLeastAmount, 0, allocated.getItem(userLW)[2] + userLeastAmount});
         	
     		this.firstOfferMade = true;
-    		this.allocated = propose; //updating our board;
         	return propose;
 
     	} else {
@@ -220,7 +283,6 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
         	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2] + free[myLW]});
         	
         	this.firstOfferMade = true;
-        	this.allocated = propose; //updating our board;
         	return propose;
         	
     	}
@@ -261,7 +323,6 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
         	
 
     		this.secondOfferMade = true;
-    		this.allocated = propose; //updating our board;
         	return propose;
     		
     	} else {
@@ -277,7 +338,6 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
         	
 
     		this.secondOfferMade = true;
-    		this.allocated = propose; //updating our board;
         	return propose;	
     	}
     }
@@ -286,12 +346,6 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     //This will be called when we want to make final offer, where we take 
     private Offer getBestCaseOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Best Case Offer", ServletUtils.DebugLevels.DEBUG);
-
-    	/*
-    	if (userLeastWantedItem == -1) {
-    		ServletUtils.log("ERROR - creating Best Offer, without users least wanted item being set", ServletUtils.DebugLevels.DEBUG);
-    		return null;
-    	}
     	
     	Offer propose = getCurrentAcceptedBoard(); //current board status
     	int[] free = getFreeItemsCount(); //middle row current status
@@ -303,24 +357,13 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	
     	//setting out most wanted item. MW column should be now [5, 0, 0], or otherwise whatever was in allocated before, except middle is now zero.
     	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
+    	propose.setItem(mySLW, new int[] {allocated.getItem(mySLW)[0] + free[mySLW], 0, allocated.getItem(mySLW)[2]});
     	
-    	//Taking opponent LW item.  users LW colum should be now [5,0,0], or otherwise whatever was in the allocated before, except middle is now zero.
-    	propose.setItem(userLeastWantedItem, new int[] {allocated.getItem(userLeastWantedItem)[0] + free[userLeastWantedItem], 0, allocated.getItem(userLeastWantedItem)[2]});
-    	
-    	//giving opponent our middle items
+    	//giving opponent mySMW & mLW
+    	propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0], 0, allocated.getItem(mySMW)[2] + free[mySMW]});
     	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2] + free[myLW]});
-    	
-    	//giving the last middle wanted item
-    	int lastItem = ((mySMW == userLeastWantedItem) ?  mySLW : mySMW);
-    	propose.setItem(myLW, new int[] {allocated.getItem(lastItem)[0], 0, allocated.getItem(lastItem)[2] + free[lastItem]});
-    	
-    	//TODO - for some reason in the Repeatedfavor, they don't update allocated, maybe because only if the user accepts the offer?
-    	//In that case, if the user doesn't accept, we are still continuing from where we left of, therefore we should probably update allocated.
-    	this.allocated = propose;
-    	
+    	    	
     	return propose;
-    	*/
-    	return null;
     }
     
     //We take half of our least wanted, and our most wanted, and half of second wanted
@@ -329,18 +372,100 @@ public class Biu5Behavior extends IAGOCoreBehavior implements BehaviorPolicy {
     	return null;
     }
     
-    //we take our first two most wanted
+    //we take our first two most wanted    
     private Offer getUncooperativeOffer(History history) {
     	ServletUtils.log("DEBUG - Creating Uncooperative Offer", ServletUtils.DebugLevels.DEBUG);
-    	return null;
+    	
+    	
+    	Offer propose = getCurrentAcceptedBoard(); //current board status
+    	int[] free = getFreeItemsCount(); //middle row current status
+    	
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int myTMW = this.myPreferences.get(1); //second most wanted
+    	int myLW = this.myPreferences.get(2); //second least wanted
+    	
+    	//Our uncooperative offer - take our 2 most wanted items, and give user the other two
+    	propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + free[myMW], 0, allocated.getItem(myMW)[2]});
+    	propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0] + free[mySMW], 0, allocated.getItem(mySMW)[2]});
+    	
+    	propose.setItem(myTMW, new int[] {allocated.getItem(myTMW)[0], 0, allocated.getItem(myTMW)[2]  + free[myTMW]});
+    	propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0], 0, allocated.getItem(myLW)[2]  + free[myLW]});
+    	
+    	this.uncooperativeOfferMade = true;
+    	return propose;
     }
     
     //wherever we are with our last offer, we take one off from the next valuable item, and take one less valuable item.
     private Offer getRecursiveOffer(History history) {
-    	return null;
+    	ServletUtils.log("DEBUG - First Cycle Offer, user told least wanted item", ServletUtils.DebugLevels.DEBUG);
+    	
+    	Offer propose = getCurrentAcceptedBoard(); //current board status (based on the allocated board)
+    	int[] free = getFreeItemsCount(); //middle row current status
+
+    	// switch case on "any" combo of the following preferences in order to generate a general offer
+    	int myLW = this.myPreferences.get(3); //my least wanted
+    	int mySLW = this.myPreferences.get(2); //my second least wanted
+    	int mySMW = this.myPreferences.get(1); //second most wanted
+    	int myMW = this.myPreferences.get(0); //most wanted
+    	
+    	int userLW = this.utils.opponent.get_least();
+    	int userSLW = this.utils.opponent.get_second_least();
+    	int userSMW = this.utils.opponent.get_second_most();
+    	int userMW = this.utils.opponent.get_most();
+    	
+    	boolean generous = firstOfferGenerosity || secondOfferGenerosity;
+    	
+    	if (uncooperativeOfferMade)
+    	{
+        	if (!(lastRecursiveOffer == null)) // take .75(MW + SMW), .25(LW + SLW)
+        	{
+    			int numItems = generous? (int)(Math.ceil(free[mySMW] * .75)) : (int)(Math.floor(free[mySMW] * .75));
+    			propose.setItem(myMW, new int[] {allocated.getItem(myMW)[0] + numItems, 0, allocated.getItem(myMW)[2] + (free[myMW] - numItems)});
+    			
+    			numItems = generous? (int)(Math.ceil(free[mySMW] * .75)) : (int)(Math.floor(free[mySMW] * .75));
+    			propose.setItem(mySMW, new int[] {allocated.getItem(mySMW)[0] + numItems, 0, allocated.getItem(mySMW)[2] + (free[mySMW] - numItems)});
+    			
+    			numItems = generous? (int)(Math.ceil(free[mySLW] * .25)) : (int)(Math.floor(free[mySLW] * .25));
+    			propose.setItem(mySLW, new int[] {allocated.getItem(mySLW)[0] + numItems, 0, allocated.getItem(mySLW)[2] + (free[mySLW] - numItems)});
+    			
+    			numItems = generous? (int)(Math.ceil(free[myLW] * .25)) : (int)(Math.floor(free[myLW] * .25));
+    			propose.setItem(myLW, new int[] {allocated.getItem(myLW)[0] + numItems, 0, allocated.getItem(myLW)[2] + (free[myLW] - numItems)});
+        	}
+        	else // trade 1 item (random)
+        	{
+        		do {
+        			propose = getCurrentAcceptedBoard(); // original current board status (based on the allocated board)
+            		Random rand = new Random();
+            		int randItem = rand.nextInt(game.getNumIssues());
+            		int nextRandItem = randItem;
+            		do {
+            			nextRandItem = rand.nextInt(game.getNumIssues());
+            		} while (randItem == nextRandItem);
+            		
+            		propose.setItem(randItem, new int[] {propose.getItem(randItem)[0] + 1, 0, propose.getItem(randItem)[2] - 1});
+            		propose.setItem(nextRandItem, new int[] {propose.getItem(nextRandItem)[0] - 1, 0, propose.getItem(nextRandItem)[2] + 1});
+        		} while (previousOffersMade.contains(propose)); // Offer already re-implements the 'equals' method (no need for us to do that)
+        	}
+    	}
+    	else // first, we wish to use the uncooperative offer
+    	{
+    		propose = getUncooperativeOffer(history);
+    	}
+    	
+    	if (gradeOffer(propose) < OFFER_THRESH) {
+    		propose = null;
+    	}
+    	
+    	if (propose != null)
+    	{
+    		lastRecursiveOffer = propose;
+    		previousOffersMade.add(propose);
+    	}
+    	
+    	return propose;
     }
     
-
     /*
      * Following sections represents utility functions for creating offers
      */
