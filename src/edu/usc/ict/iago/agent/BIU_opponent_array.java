@@ -125,6 +125,51 @@ public class BIU_opponent_array {
 		
 		return index;
 	}
+	
+	public int get_second_most() {
+		int min = -999;
+		int sec_min = -999;
+		int index = -1;
+		int first_index = -1;
+		for (int x = 0; x < graph.size(); x++)
+		{	
+			int v = graph.get(x).size();
+			if (v < min) {
+				sec_min = min;
+				index = first_index;
+				
+				min = v;
+				first_index = x;
+			}
+			else if (v < sec_min) {
+				sec_min = v;
+				index = x;
+			}
+					
+			
+		}
+		if (sec_min == 0)
+			return -1;
 		
+		return index;
+	}
+	
+	public int get_most() {
+		int min = -1;
+		int index = -1;
+		for (int x = 0; x < graph.size(); x++)
+		{	
+			int v = graph.get(x).size();
+			if (v < min) {
+				min = v;
+				index = x;
+			}
 		
+			
+		}
+		if (min == 0)
+			return -1;
+		
+		return index;
+	}
 }
