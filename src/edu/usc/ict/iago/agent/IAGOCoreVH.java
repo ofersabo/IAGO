@@ -57,7 +57,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 		this.expression = expression;
 		this.messages = messages;
 		this.behavior = behavior;
-		aue.setAgentBelief(this.behavior.getAgentBelief());
+		this.utils.setAgentBelief(this.behavior.getAgentBelief());
 
 		this.messages.setUtils(utils);
 		this.behavior.setUtils(utils);
@@ -172,7 +172,8 @@ public abstract class IAGOCoreVH extends GeneralVH
 			this.disable = false;
 
 			//if we wanted, we could change our Policies between games... but not easily.  Probably don't do that.  Just don't.
-
+						
+			
 			//we should also reset some things
 			timeFlag = false;
 			firstFlag = true; // changed
@@ -190,6 +191,11 @@ public abstract class IAGOCoreVH extends GeneralVH
 				String newGameMessage = "It's good to see you again!  Let's get ready to negotiate again.";
 				Event e0 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, Event.SubClass.NONE, newGameMessage, (int) (100*game.getMultiplier()));
 				resp.add(e0);
+				
+				this.behavior = new Biu5Behavior();
+				this.behavior.setUtils(utils);			
+				this.utils.setAgentBelief(this.behavior.getAgentBelief());
+				
 				return resp;
 			}
 			firstGame = false;
@@ -623,7 +629,7 @@ public abstract class IAGOCoreVH extends GeneralVH
 									resp.add(e4);
 								}
 							} else {
-									String str = "What do you say? we are trying to take you least valuable item again.";
+									String str = "What do you say? we are trying to take your least valuable item again.";
 									Event e4 = new Event(this.getID(), Event.EventClass.SEND_MESSAGE, str, (int) (1 * 2000 * game.getMultiplier()));
 									resp.add(e4);
 								}
